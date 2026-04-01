@@ -113,6 +113,40 @@ Refund Rate     = DIVIDE(COUNTROWS(FILTER(fact_transactions, fact_transactions[r
 
 ---
 
+## Analysis Screenshots
+
+### 01 — Executive Summary (KPI Cards)
+![Executive Summary](screenshots/01_executive_summary.png)
+
+### 02 — Monthly Revenue & Order Trends
+![Revenue Trends](screenshots/02_monthly_revenue_trend.png)
+
+### 03 — Customer Analytics (RFM Segmentation & LTV)
+![Customer RFM LTV](screenshots/03_customer_rfm_ltv.png)
+
+### 04 — Campaign Performance (ROI & A/B Test)
+![Campaign Performance](screenshots/04_campaign_performance.png)
+
+### 05 — Product Analytics
+![Product Analytics](screenshots/05_product_analytics.png)
+
+### 06 — Conversion Funnel & Traffic Sources
+![Funnel Analysis](screenshots/06_funnel_analysis.png)
+
+### 07 — Behavioral Heatmap (Day × Hour)
+![Behavioral Heatmap](screenshots/07_behavioral_heatmap.png)
+
+### 08 — Acquisition Channels & Country Revenue
+![Acquisition Country](screenshots/08_acquisition_country.png)
+
+### 09 — Refund Rate & Discount Impact
+![Refund Discount](screenshots/09_refund_discount_analysis.png)
+
+### 10 — Top 10 Products by Revenue
+![Top 10 Products](screenshots/10_top10_products.png)
+
+---
+
 ## Tech Stack
 
 | Layer | Tool |
