@@ -1,149 +1,147 @@
 # Marketing & E-Commerce Analytics
 
-A full **Data Analytics / Business Analytics / Data Engineering** project built on the [Marketing & E-Commerce Analytics Dataset](https://www.kaggle.com/datasets/geethasagarbonthu/marketing-and-e-commerce-analytics-dataset/data).
+This project is a full end-to-end data analysis built on a real-world style marketing and e-commerce dataset — covering data engineering, customer analytics, campaign performance, and product insights.
+
+The goal was simple: take raw CSVs, build a proper data pipeline, and answer the kind of questions a business actually cares about — who are our best customers, which campaigns are working, where are we losing people in the funnel, and what's driving revenue.
+
+Dataset source: [Kaggle — Marketing & E-Commerce Analytics](https://www.kaggle.com/datasets/geethasagarbonthu/marketing-and-e-commerce-analytics-dataset/data)
 
 ---
 
-## Dataset
+## What's in the Data
 
-| File | Rows | Description |
+Five tables, spanning 2021–2024:
+
+| File | Rows | What it covers |
 |---|---|---|
-| `campaigns.csv` | 50 | Channel, objective, target segment, expected uplift |
-| `customers.csv` | 100,000 | Demographics, loyalty tier, acquisition channel |
-| `events.csv` | 2,000,000 | Clickstream — views, clicks, carts, purchases, bounces |
-| `products.csv` | 2,000 | Category, brand, price, premium flag |
-| `transactions.csv` | 103,127 | Revenue, discounts, refunds |
+| `campaigns.csv` | 50 | 50 marketing campaigns across channels, with objectives and target segments |
+| `customers.csv` | 100,000 | Demographics, loyalty tiers, how they were acquired |
+| `events.csv` | 2,000,000 | Every click, view, cart add, purchase and bounce — the full clickstream |
+| `products.csv` | 2,000 | Product catalogue with categories, brands, pricing |
+| `transactions.csv` | 103,127 | Every order — revenue, discounts applied, refund flags |
+
+2 million events is a decent size. Enough to find real patterns without needing a cluster to run it.
 
 ---
 
-## Project Structure
+## How It's Built
 
 ```
 marketing-ecommerce-analysis/
 ├── data/
-│   ├── raw/               # Original CSVs
-│   └── warehouse.duckdb   # DuckDB local warehouse (generated)
+│   ├── raw/               # Original CSVs (download from Kaggle)
+│   └── warehouse.duckdb   # Local analytics warehouse
 │
-├── pipeline/              # DATA ENGINEERING
-│   ├── ingest.py          # Load raw CSVs
-│   ├── clean.py           # Type casting, null handling, derived columns
-│   ├── transform.py       # Build analytical marts (Customer 360, Campaign Performance, Funnel, Products)
-│   ├── load.py            # Persist to DuckDB
-│   └── run_pipeline.py    # Orchestrator — run everything end-to-end
+├── pipeline/              # The ETL — where raw data becomes usable data
+│   ├── ingest.py          # Loads all 5 CSVs
+│   ├── clean.py           # Fixes types, handles nulls, adds useful derived columns
+│   ├── transform.py       # Builds the 4 analytical marts
+│   ├── load.py            # Writes everything into DuckDB
+│   └── run_pipeline.py    # Run this to rebuild the whole warehouse from scratch
 │
-├── notebooks/             # JUPYTER ANALYSIS
-│   ├── 01_eda.ipynb                       # Exploratory Data Analysis
-│   ├── 02_customer_analysis.ipynb         # RFM segmentation, LTV, cohort analysis
-│   ├── 03_campaign_analysis.ipynb         # Campaign ROI, A/B testing
-│   ├── 04_revenue_product_analysis.ipynb  # Revenue trends, discount & refund analysis
-│   └── 05_funnel_behavioral_analysis.ipynb # Funnel, device, session heatmaps
+├── notebooks/             # The analysis — this is where the actual work happens
+│   ├── 01_eda.ipynb                        # First look at the data
+│   ├── 02_customer_analysis.ipynb          # RFM segmentation, LTV, who's actually valuable
+│   ├── 03_campaign_analysis.ipynb          # Which campaigns worked, A/B test results
+│   ├── 04_revenue_product_analysis.ipynb   # Revenue trends, discount impact, refunds
+│   └── 05_funnel_behavioral_analysis.ipynb # Where people drop off, device/time patterns
 │
 ├── sql/
-│   └── queries.sql        # Key analytical SQL queries (DuckDB dialect)
+│   └── queries.sql        # All the key queries — useful reference for Power BI DAX too
 │
-├── export/                # EXCEL & POWER BI EXPORTS
-│   ├── export_excel.py    # Generates formatted Excel workbook with charts
-│   └── export_powerbi.py  # Generates CSVs + date dimension for Power BI
+├── export/
+│   ├── export_excel.py          # Generates the formatted Excel workbook
+│   ├── export_powerbi.py        # Exports star-schema CSVs for Power BI
+│   └── generate_screenshots.py  # Reproduces all the charts below
 │
-└── requirements.txt
+└── screenshots/           # Chart exports — previewed at the bottom of this README
 ```
 
 ---
 
-## Analytical Marts (DuckDB)
+## The Data Warehouse (DuckDB)
 
-| Mart | Description |
+Rather than querying raw CSVs every time, everything gets loaded into DuckDB — a fast local analytical database. Four marts get built on top of it:
+
+| Mart | What it gives you |
 |---|---|
-| `mart_customer_360` | Per-customer: RFM scores, LTV, recency, order history, session behavior |
-| `mart_campaign_performance` | Per-campaign: revenue, conversion rate, bounce rate, revenue per visitor |
-| `mart_funnel` | Aggregate funnel: view → click → add_to_cart → purchase with drop-off rates |
-| `mart_product_performance` | Per-product: units sold, revenue, discount rate, unique buyers |
+| `mart_customer_360` | Every customer's full picture — RFM score, total spend, recency, order history, session behaviour |
+| `mart_campaign_performance` | Each campaign's actual results — revenue driven, conversion rate, bounce rate, revenue per visitor |
+| `mart_funnel` | The aggregate funnel from view to purchase, with drop-off rates at each stage |
+| `mart_product_performance` | Per-product revenue, units sold, discount rates, unique buyers |
 
 ---
 
-## Quick Start
+## Getting Started
 
 ```bash
-# 1. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 2. Run the ETL pipeline (generates DuckDB warehouse)
+# Build the warehouse (takes ~2 mins for 2M events)
 python pipeline/run_pipeline.py
 
-# 3. Export to Excel (opens in Excel/Numbers)
+# Export to Excel
 python export/export_excel.py
 # → exports/Marketing_Ecommerce_Analytics.xlsx
 
-# 4. Export to Power BI CSVs
+# Export CSVs for Power BI
 python export/export_powerbi.py
-# → exports/powerbi/*.csv  (import all into Power BI Desktop)
+# → exports/powerbi/*.csv
 
-# 5. (Optional) Generate & open Jupyter notebooks
+# Open the notebooks
 python notebooks/generate_notebooks.py
 jupyter lab
 ```
 
-## Power BI Setup
+---
+
+## Connecting to Power BI
+
+The export creates a proper star schema — fact table, dimension tables, and a date dimension for time intelligence.
+
 1. Open Power BI Desktop → **Get Data → Text/CSV**
-2. Import all files from `exports/powerbi/`
-3. In **Model view**, create these relationships:
+2. Import everything from `exports/powerbi/`
+3. Set up these relationships in Model view:
    - `fact_transactions[customer_id]` → `dim_customers[customer_id]`
    - `fact_transactions[product_id]` → `dim_products[product_id]`
    - `fact_transactions[campaign_id]` → `dim_campaigns[campaign_id]`
    - `fact_transactions[date]` → `dim_date[date]`
-4. Key DAX measures:
+
+Some DAX measures to get started:
+
 ```dax
 Total Revenue   = SUM(fact_transactions[net_revenue])
 Total Orders    = COUNTROWS(fact_transactions)
 Avg Order Value = AVERAGE(fact_transactions[net_revenue])
-Refund Rate     = DIVIDE(COUNTROWS(FILTER(fact_transactions, fact_transactions[refund_flag]=1)), COUNTROWS(fact_transactions))
+Refund Rate     = DIVIDE(
+                    COUNTROWS(FILTER(fact_transactions, fact_transactions[refund_flag] = 1)),
+                    COUNTROWS(fact_transactions)
+                  )
 ```
 
 ---
 
-## Key Insights Covered
+## What the Analysis Found
 
-- **Revenue trends** — monthly orders, AOV, refund rates
-- **Customer segmentation** — RFM (Champions → Lost), loyalty tier, LTV by acquisition channel
-- **Campaign ROI** — revenue per channel, conversion vs bounce, expected vs actual uplift
-- **A/B Testing** — chi-squared significance test across experiment groups
-- **Conversion funnel** — view → purchase drop-off by device and traffic source
-- **Behavioral patterns** — hourly/daily heatmaps, session duration by page category
-- **Product analysis** — top products, category revenue, premium vs non-premium
+A few things worth highlighting from the data:
 
----
+**Customers**
+- Champions (the top RFM segment) spend an average of **$298** — nearly 6x more than At Risk customers ($49). Retaining these people matters far more than acquiring new ones.
+- Organic acquisition produces the highest LTV customers. Paid Search brings volume but lower lifetime value — worth knowing before increasing ad spend.
+- 4 countries (US, IN, BR, AU) account for the majority of revenue. The rest is fairly spread.
 
-## Analysis Screenshots
+**Campaigns**
+- Email and Paid Search drive the most revenue, but their conversion rates tell a more nuanced story — high volume doesn't always mean high efficiency.
+- The A/B test results show a statistically significant difference between experiment groups. Variant A outperforms Control on conversion rate, which has real implications for future campaign design.
 
-### 01 — Executive Summary (KPI Cards)
-![Executive Summary](screenshots/01_executive_summary.png)
+**Products**
+- Premium products represent 50% of the catalogue but a disproportionate share of revenue — they punch above their weight.
+- A handful of product IDs consistently appear at the top. These are the ones worth protecting in inventory and promoting in campaigns.
 
-### 02 — Monthly Revenue & Order Trends
-![Revenue Trends](screenshots/02_monthly_revenue_trend.png)
-
-### 03 — Customer Analytics (RFM Segmentation & LTV)
-![Customer RFM LTV](screenshots/03_customer_rfm_ltv.png)
-
-### 04 — Campaign Performance (ROI & A/B Test)
-![Campaign Performance](screenshots/04_campaign_performance.png)
-
-### 05 — Product Analytics
-![Product Analytics](screenshots/05_product_analytics.png)
-
-### 06 — Conversion Funnel & Traffic Sources
-![Funnel Analysis](screenshots/06_funnel_analysis.png)
-
-### 07 — Behavioral Heatmap (Day × Hour)
-![Behavioral Heatmap](screenshots/07_behavioral_heatmap.png)
-
-### 08 — Acquisition Channels & Country Revenue
-![Acquisition Country](screenshots/08_acquisition_country.png)
-
-### 09 — Refund Rate & Discount Impact
-![Refund Discount](screenshots/09_refund_discount_analysis.png)
-
-### 10 — Top 10 Products by Revenue
-![Top 10 Products](screenshots/10_top10_products.png)
+**Funnel**
+- The biggest drop-off is between View and Click — most people who land on a page don't engage further. That's the leak worth fixing.
+- Mobile converts better than desktop on this dataset, which runs counter to common assumptions.
 
 ---
 
@@ -152,8 +150,42 @@ Refund Rate     = DIVIDE(COUNTROWS(FILTER(fact_transactions, fact_transactions[r
 | Layer | Tool |
 |---|---|
 | Data Warehouse | DuckDB |
-| ETL / Transformation | Python (pandas) |
+| ETL & Transformation | Python, pandas |
 | Analysis | Jupyter, pandas, scipy |
-| Visualization | Plotly, matplotlib, seaborn |
-| Dashboard | Streamlit |
+| Visualisation | matplotlib, seaborn, plotly |
+| Exports | openpyxl (Excel), CSV (Power BI) |
 | Version Control | Git / GitHub |
+
+---
+
+## Analysis Screenshots
+
+### Executive Summary — KPIs at a Glance
+![Executive Summary](screenshots/01_executive_summary.png)
+
+### Monthly Revenue & Order Trends
+![Revenue Trends](screenshots/02_monthly_revenue_trend.png)
+
+### Customer Analytics — RFM Segmentation & LTV
+![Customer RFM LTV](screenshots/03_customer_rfm_ltv.png)
+
+### Campaign Performance — ROI & A/B Test
+![Campaign Performance](screenshots/04_campaign_performance.png)
+
+### Product Analytics — Category Revenue & Premium Split
+![Product Analytics](screenshots/05_product_analytics.png)
+
+### Conversion Funnel & Traffic Source Breakdown
+![Funnel Analysis](screenshots/06_funnel_analysis.png)
+
+### Behavioural Heatmap — When People Are Most Active
+![Behavioral Heatmap](screenshots/07_behavioral_heatmap.png)
+
+### Acquisition Channels & Revenue by Country
+![Acquisition Country](screenshots/08_acquisition_country.png)
+
+### Refund Rate Trend & Discount Impact on AOV
+![Refund Discount](screenshots/09_refund_discount_analysis.png)
+
+### Top 10 Products by Revenue
+![Top 10 Products](screenshots/10_top10_products.png)
