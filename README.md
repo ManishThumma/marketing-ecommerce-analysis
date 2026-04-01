@@ -41,13 +41,9 @@ marketing-ecommerce-analysis/
 ├── sql/
 │   └── queries.sql        # Key analytical SQL queries (DuckDB dialect)
 │
-├── dashboard/             # STREAMLIT DASHBOARD
-│   ├── app.py             # Home — KPI overview
-│   └── pages/
-│       ├── 1_customers.py     # RFM, LTV, acquisition, loyalty
-│       ├── 2_campaigns.py     # ROI, A/B test, channel comparison
-│       ├── 3_products.py      # Category, premium vs non-premium, top products
-│       └── 4_funnel.py        # Funnel, heatmap, traffic source, experiment groups
+├── export/                # EXCEL & POWER BI EXPORTS
+│   ├── export_excel.py    # Generates formatted Excel workbook with charts
+│   └── export_powerbi.py  # Generates CSVs + date dimension for Power BI
 │
 └── requirements.txt
 ```
@@ -74,12 +70,33 @@ pip install -r requirements.txt
 # 2. Run the ETL pipeline (generates DuckDB warehouse)
 python pipeline/run_pipeline.py
 
-# 3. Launch the Streamlit dashboard
-streamlit run dashboard/app.py
+# 3. Export to Excel (opens in Excel/Numbers)
+python export/export_excel.py
+# → exports/Marketing_Ecommerce_Analytics.xlsx
 
-# 4. (Optional) Generate Jupyter notebooks
+# 4. Export to Power BI CSVs
+python export/export_powerbi.py
+# → exports/powerbi/*.csv  (import all into Power BI Desktop)
+
+# 5. (Optional) Generate & open Jupyter notebooks
 python notebooks/generate_notebooks.py
 jupyter lab
+```
+
+## Power BI Setup
+1. Open Power BI Desktop → **Get Data → Text/CSV**
+2. Import all files from `exports/powerbi/`
+3. In **Model view**, create these relationships:
+   - `fact_transactions[customer_id]` → `dim_customers[customer_id]`
+   - `fact_transactions[product_id]` → `dim_products[product_id]`
+   - `fact_transactions[campaign_id]` → `dim_campaigns[campaign_id]`
+   - `fact_transactions[date]` → `dim_date[date]`
+4. Key DAX measures:
+```dax
+Total Revenue   = SUM(fact_transactions[net_revenue])
+Total Orders    = COUNTROWS(fact_transactions)
+Avg Order Value = AVERAGE(fact_transactions[net_revenue])
+Refund Rate     = DIVIDE(COUNTROWS(FILTER(fact_transactions, fact_transactions[refund_flag]=1)), COUNTROWS(fact_transactions))
 ```
 
 ---

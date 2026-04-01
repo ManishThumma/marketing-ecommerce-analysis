@@ -4,7 +4,8 @@ duckdb==0.10.3
 matplotlib==3.8.4
 seaborn==0.13.2
 plotly==5.22.0
-streamlit==1.35.0
+openpyxl>=3.1.2
+xlsxwriter>=3.2.0
 jupyterlab==4.2.1
 nbformat==5.10.4
 scikit-learn==1.5.0
